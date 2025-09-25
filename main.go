@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"ws-whatever/domain"
 
 	ws "github.com/gorilla/websocket"
 )
@@ -13,6 +14,10 @@ var upgrader = ws.Upgrader{}
 func main() {
 	mux := http.NewServeMux()
 	tmpl := template.Must(template.ParseFiles("templates/index.html"))
+
+	hub := domain.NewHub()
+
+	go hub.Run()
 
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		tmpl.Execute(w, nil)
@@ -25,17 +30,11 @@ func main() {
 			return
 		}
 
-		for {
-			_, payload, err := conn.ReadMessage()
-			if err != nil {
-				if ws.IsUnexpectedCloseError(err, ws.CloseGoingAway, ws.CloseAbnormalClosure) {
-					log.Printf("ERROR: %v", err)
-				}
-				break
-			}
+		client := domain.NewClient(conn, make(chan *domain.Message, 256), hub)
+		hub.AddClient(client)
 
-			log.Println(string(payload))
-		}
+		go client.Read()
+		go client.Write()
 	})
 
 	log.Println("Server running on port :6969")

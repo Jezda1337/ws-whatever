@@ -4,6 +4,8 @@
   <body>
     <h1>Hi mom</h1>
 
+    <ul id="messages"></ul>
+
     <form>
       <input name="message" placeholder="write me" />
       <button disabled id="send-btn">Send</button>
@@ -19,6 +21,13 @@
         log("OPEN");
         document.getElementById("send-btn").removeAttribute("disabled");
         handleFormSubmit();
+      };
+
+      ws.onmessage = (e) => {
+        const payload = JSON.parse(e.data);
+        const li = document.createElement("li");
+        li.textDocument = `${payload.id}: ${payload.payload}`;
+        document.getElementById("messages").appendChild(li);
       };
 
       function handleFormSubmit() {
