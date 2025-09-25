@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+  <head> </head>
+  <body>
+    <h1>Hi mom</h1>
+
+    <form>
+      <input name="message" placeholder="write me" />
+      <button disabled id="send-btn">Send</button>
+    </form>
+
+    <script>
+      const log = console.log;
+      const form = document.forms[0];
+      // ws for dev
+      // wss for prod
+      const ws = new WebSocket(`ws://${document.location.host}/ws`);
+      ws.onopen = () => {
+        log("OPEN");
+        document.getElementById("send-btn").removeAttribute("disabled");
+        handleFormSubmit();
+      };
+
+      function handleFormSubmit() {
+        form.onsubmit = (e) => {
+          e.preventDefault();
+          const payloadValue = form.message.value;
+
+          log(payloadValue);
+          const message = {
+            type: "text",
+            payload: payloadValue,
+          };
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify(message));
+          }
+        };
+      }
+    </script>
+  </body>
+</html>
