@@ -14,19 +14,17 @@ type Client struct {
 	ConnID string
 	Conn   *ws.Conn
 	Send   chan *Message
-	Hub    *Hub
 }
 
-func NewClient(conn *ws.Conn, send chan *Message, hub *Hub) *Client {
+func NewClient(conn *ws.Conn, send chan *Message) *Client {
 	return &Client{
 		ConnID: uuid.New().String(),
 		Conn:   conn,
 		Send:   send,
-		Hub:    hub,
 	}
 }
 
-func (c *Client) Read() {
+func (c *Client) Read(broadcast chan<- *Message) {
 	defer func() {
 		c.Conn.Close()
 	}()
@@ -52,7 +50,7 @@ func (c *Client) Read() {
 			message.ID = &id
 		}
 
-		log.Printf("Message: %v", message)
+		broadcast <- &message
 	}
 }
 func (c *Client) Write() {

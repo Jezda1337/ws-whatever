@@ -26,7 +26,7 @@
       ws.onmessage = (e) => {
         const payload = JSON.parse(e.data);
         const li = document.createElement("li");
-        li.textDocument = `${payload.id}: ${payload.payload}`;
+        li.textContent = `${payload.id}: ${payload.payload}`;
         document.getElementById("messages").appendChild(li);
       };
 

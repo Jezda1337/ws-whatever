@@ -1,20 +1,23 @@
-package domain
+package hub
 
-import "log"
+import (
+	"log"
+	"ws-whatever/internal/domain"
+)
 
 type Hub struct {
-	Clients   ClientList
-	Join      chan *Client
-	Leave     chan *Client
-	Broadcast chan *Message
+	Clients   domain.ClientList
+	Join      chan *domain.Client
+	Leave     chan *domain.Client
+	Broadcast chan *domain.Message
 }
 
 func NewHub() *Hub {
 	return &Hub{
-		Clients:   make(ClientList),
-		Join:      make(chan *Client),
-		Leave:     make(chan *Client),
-		Broadcast: make(chan *Message),
+		Clients:   make(domain.ClientList),
+		Join:      make(chan *domain.Client),
+		Leave:     make(chan *domain.Client),
+		Broadcast: make(chan *domain.Message),
 	}
 }
 
@@ -39,7 +42,6 @@ func (h *Hub) Run() {
 	}
 }
 
-func (h *Hub) AddClient(c *Client) {
-	// dunno about this, like wtf?
+func (h *Hub) AddClient(c *domain.Client) {
 	h.Join <- c
 }
