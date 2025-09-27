@@ -15,6 +15,7 @@ type Client struct {
 	Conn    *ws.Conn
 	Manager *Manager
 	Send    chan []byte
+	Room    string
 }
 
 func NewClient(conn *ws.Conn, m *Manager) *Client {
@@ -54,12 +55,15 @@ func (c *Client) ReadMessages() {
 
 			c.Manager.RLock()
 			for client := range c.Manager.Clients {
-				client.Send <- data
+				if client.Room == c.Room {
+					client.Send <- data
+				}
 			}
 			c.Manager.RUnlock()
 
 		case "change_room":
 			// TODO: move client to another room (next step)
+			c.Room = event.Payload
 		}
 	}
 }

@@ -1,16 +1,32 @@
 const log = console.log;
-const form = document.forms[0];
+const messageForm = document.getElementById("message-form");
+const chatroomForm = document.getElementById("chatroom-form");
 const ws = new WebSocket(`ws://${document.location.host}/ws`);
-ws.onopen = (e) => {
-  log(e);
-  form.message.focus();
-  form.addEventListener("submit", (e) => {
+let currentchatroom = "";
+ws.onopen = () => {
+  // message form handler
+  messageForm.message.focus();
+  messageForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    const messageField = form.message;
-    if (!messageField.value) return;
+    if (currentchatroom !== "") {
+      const messageField = messageForm.message;
+      if (!messageField.value) return;
 
+      ws.send(
+        JSON.stringify({ type: "send_message", payload: messageField.value }),
+      );
+    }
+  });
+
+  // chat-room handler
+  chatroomForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const chatroomField = chatroomForm.chatroom;
+
+    log(chatroomField.value);
+    currentchatroom = chatroomField.value;
     ws.send(
-      JSON.stringify({ type: "send_message", payload: messageField.value }),
+      JSON.stringify({ type: "change_room", payload: chatroomField.value }),
     );
   });
 };

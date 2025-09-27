@@ -17,6 +17,7 @@ var upgrader = gws.Upgrader{
 func main() {
 	mux := http.NewServeMux()
 	tmpl := template.Must(template.ParseFiles("web/templates/index.html"))
+	// logger := utils.NewLogger()
 
 	m := ws.NewManager()
 
