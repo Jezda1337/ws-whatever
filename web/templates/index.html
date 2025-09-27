@@ -1,50 +1,15 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-  <head> </head>
+  <head>
+    <script defer src="/static/index.js"></script>
+  </head>
   <body>
-    <h1>Hi mom</h1>
-
-    <ul id="messages"></ul>
+    <h1>hi mom</h1>
+    <h2 id="id">--</h2>
 
     <form>
-      <input name="message" placeholder="write me" />
-      <button disabled id="send-btn">Send</button>
+      <input name="message" placeholder="hello" />
     </form>
-
-    <script>
-      const log = console.log;
-      const form = document.forms[0];
-      // ws for dev
-      // wss for prod
-      const ws = new WebSocket(`ws://${document.location.host}/ws`);
-      ws.onopen = () => {
-        log("OPEN");
-        document.getElementById("send-btn").removeAttribute("disabled");
-        handleFormSubmit();
-      };
-
-      ws.onmessage = (e) => {
-        const payload = JSON.parse(e.data);
-        const li = document.createElement("li");
-        li.textContent = `${payload.id}: ${payload.payload}`;
-        document.getElementById("messages").appendChild(li);
-      };
-
-      function handleFormSubmit() {
-        form.onsubmit = (e) => {
-          e.preventDefault();
-          const payloadValue = form.message.value;
-
-          log(payloadValue);
-          const message = {
-            type: "text",
-            payload: payloadValue,
-          };
-          if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify(message));
-          }
-        };
-      }
-    </script>
+    <ul id="chat"></ul>
   </body>
 </html>
