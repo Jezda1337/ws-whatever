@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"html/template"
 	"log"
-	"net/http"
 	"ws-whatever/ws"
 
 	gws "github.com/gorilla/websocket"
+	"github.com/labstack/echo"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -33,40 +33,41 @@ func main() {
 	sslmode := "disable"
 
 	dsn := fmt.Sprintf("host=%v user=%v password=%v dbname=%v port=%v sslmode=%v", host, user, password, dbname, port, sslmode)
-
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	mux := http.NewServeMux()
+	e := echo.New()
 	tmpl := template.Must(template.ParseFiles("web/templates/index.html"))
 	// logger := utils.NewLogger()
 
 	m := ws.NewManager(db)
 
-	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		tmpl.Execute(w, nil)
+	e.GET("/", func(c echo.Context) error {
+		tmpl.Execute(c.Response().Writer, nil)
+		return nil
 	})
 
-	mux.HandleFunc("GET /ws", func(w http.ResponseWriter, r *http.Request) {
-		conn, err := upgrader.Upgrade(w, r, nil)
+	e.GET("/ws", func(c echo.Context) error {
+		conn, err := upgrader.Upgrade(c.Response().Writer, c.Request(), nil)
 		if err != nil {
 			log.Printf("Something goes wrong with upgrading protocol: %v", err)
-			return
+			return err
 		}
 
-		c := ws.NewClient(conn, m)
-		c.Manager.AddClient(c)
+		client := ws.NewClient(conn, m)
+		client.Manager.AddClient(client)
 
-		go c.ReadMessages()
-		go c.WriteMessages()
+		go client.ReadMessages()
+		go client.WriteMessages()
+
+		return nil
 	})
 
 	// serving static files
-	fs := http.FileServer(http.Dir("web/static/"))
-	mux.Handle("GET /static/", http.StripPrefix("/static/", fs))
+	e.Static("/static", "web/static")
 
 	log.Println("Server running on port :6969")
-	log.Fatal(http.ListenAndServe(":6969", mux))
+	e.Logger.Fatal(e.Start(":6969"))
 }
