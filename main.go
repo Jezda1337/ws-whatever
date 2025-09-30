@@ -50,7 +50,7 @@ func main() {
 	})
 
 	e.GET("/ws", func(c echo.Context) error {
-		conn, err := upgrader.Upgrade(c.Response().Writer, c.Request(), nil)
+		conn, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 		if err != nil {
 			log.Printf("Something goes wrong with upgrading protocol: %v", err)
 			return err
