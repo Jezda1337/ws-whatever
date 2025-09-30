@@ -1,0 +1,44 @@
+version: '3.9'
+
+services:
+  postgres:
+    container_name: messaging-postgres
+    image: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=HgYKJ72T
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=messaging
+  # eventpage-redis:
+  #   container_name: eventpage-redis
+  #   image: redis:latest
+  #   restart: always
+  #   ports:
+  #     - "6379:6379"
+  #   command: redis-server --save 20 1 --loglevel warning
+  #   volumes:
+  #     - redis:/data
+  # eventpage-gcp-storage-emulator:
+  #   container_name: eventpage-gcp-storage-emulator
+  #   image: oittaa/gcp-storage-emulator
+  #   restart: always
+  #   ports:
+  #     - "9023:9023"
+  #   command: [ "start",
+  #              "--host=0.0.0.0", "--port=9023",
+  #              "--default-bucket=my-bucket" ]
+  #   volumes:
+  #     - gcp-storage:/storage
+  #   environment:
+  #     - PORT=9023
+
+volumes:
+  db:
+    driver: local
+  # redis:
+  #   driver: local
+  # gcp-storage:
+  #   driver: local

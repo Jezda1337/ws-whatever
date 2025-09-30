@@ -1,15 +1,20 @@
 package ws
 
-import "sync"
+import (
+	"sync"
+
+	"gorm.io/gorm"
+)
 
 type Manager struct {
 	Clients ClientList
 
 	sync.RWMutex
+	db *gorm.DB
 }
 
-func NewManager() *Manager {
-	return &Manager{Clients: make(ClientList)}
+func NewManager(db *gorm.DB) *Manager {
+	return &Manager{Clients: make(ClientList), db: db}
 }
 
 func (m *Manager) AddClient(c *Client) {

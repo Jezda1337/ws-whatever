@@ -1,0 +1,67 @@
+Table messages {
+id int [pk]
+room_id int [ref: > rooms.id, not null]
+sender_id int [ref: > users.id, not null]
+content text [not null]
+
+is_pinned bool [default: false]
+is_edited bool [default: false]
+
+created_at timestamp [default: `now()`]
+}
+
+Table message_attachments {
+id int [pk]
+message_id int [ref: > messages.id, not null]
+file_path text [not null]
+file_type text [not null]
+file_size int
+created_at timestmap [default: `now()`]
+}
+
+Table rooms {
+id int [pk]
+name text
+event_id int [ref: > events.id, not null]
+type room_type [not null]
+created_at timestamp [default: `now()`]
+}
+
+Table room_participants {
+id int [pk]
+room_id int [ref: > rooms.id, not null]
+user_id int [ref: > users.id, not null]
+joined_at timestamp [default: `now()`]
+
+indexes {
+(room_id, user_id) [unique]
+}
+}
+
+Table message_reads {
+id int [pk]
+message_id int [ref: > messages.id, not null]
+user_id int [ref: > users.id, not null]
+read_at timestamp
+
+indexes {
+(message_id, user_id) [unique]
+}
+}
+
+Table message_reactions {
+id int [pk]
+message_id int [ref: > messages.id, not null]
+user_id int [ref: > users.id, not null]
+reaction_type varchar(50) [not null]
+created_at timestamp [default: `now()`]
+}
+
+Enum room_type {
+group
+direct
+}
+
+// External service tables
+Table events { id int [pk] }
+Table users { id int [pk] }
