@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"ws-whatever/utils"
 	"ws-whatever/ws"
 
 	gws "github.com/gorilla/websocket"
@@ -40,12 +41,13 @@ func main() {
 
 	e := echo.New()
 	tmpl := template.Must(template.ParseFiles("web/templates/index.html"))
-	// logger := utils.NewLogger()
+	logger := utils.NewLogger()
 
-	m := ws.NewManager(db)
+	m := ws.NewManager(db, logger)
 
 	e.GET("/", func(c echo.Context) error {
-		tmpl.Execute(c.Response().Writer, nil)
+		tmpl.Execute(c.Response(), nil)
+
 		return nil
 	})
 
@@ -53,6 +55,7 @@ func main() {
 		conn, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 		if err != nil {
 			log.Printf("Something goes wrong with upgrading protocol: %v", err)
+			c.Logger().Error(err)
 			return err
 		}
 
