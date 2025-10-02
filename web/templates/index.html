@@ -1,19 +1,167 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebSocket Chat</title>
     <script defer src="/static/index.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        padding: 20px;
+        max-width: 800px;
+        margin: 0 auto;
+        background: #1a1a1a;
+        color: #e0e0e0;
+      }
+      h1 {
+        margin-bottom: 20px;
+        color: #fff;
+      }
+      .status {
+        padding: 10px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+      .status.connected {
+        background: #1e3a1e;
+        color: #4caf50;
+      }
+      .status.disconnected {
+        background: #3a1e1e;
+        color: #f44336;
+      }
+      .room-section {
+        margin-bottom: 20px;
+        padding: 15px;
+        background: #2a2a2a;
+        border-radius: 8px;
+      }
+      .room-section h2 {
+        font-size: 16px;
+        margin-bottom: 10px;
+        color: #bbb;
+      }
+      form {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #444;
+        border-radius: 4px;
+        font-size: 14px;
+        background: #1a1a1a;
+        color: #e0e0e0;
+      }
+      input::placeholder {
+        color: #666;
+      }
+      button {
+        padding: 10px 20px;
+        background: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      button:hover {
+        background: #45a049;
+      }
+      button:disabled {
+        background: #555;
+        cursor: not-allowed;
+      }
+      #current-room {
+        font-style: italic;
+        color: #888;
+      }
+      #chat {
+        list-style: none;
+        background: #2a2a2a;
+        border-radius: 8px;
+        padding: 15px;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+      #chat li {
+        padding: 8px;
+        margin-bottom: 5px;
+        background: #1a1a1a;
+        border-radius: 4px;
+        border-left: 3px solid #4caf50;
+      }
+      #chat .error {
+        border-left-color: #f44336;
+        background: #3a1e1e;
+      }
+      #chat .system {
+        border-left-color: #2196f3;
+        background: #1e2a3a;
+        font-style: italic;
+      }
+      .meta {
+        font-size: 12px;
+        color: #888;
+        margin-bottom: 4px;
+      }
+    </style>
   </head>
   <body>
-    <h1>hi mom</h1>
-    <h2 id="id">--</h2>
+    <h1>WebSocket Chat</h1>
 
-    <form id="chatroom-form">
-      <input name="chatroom" placeholder="chat room" />
-    </form>
+    <div id="status" class="status disconnected">Disconnected</div>
 
-    <form id="message-form">
-      <input name="message" placeholder="hello" />
-    </form>
+    <div class="room-section">
+      <h2>Join Room</h2>
+      <form id="room-form">
+        <input
+          type="number"
+          name="roomId"
+          placeholder="Enter room ID"
+          required
+        />
+        <button type="submit">Join</button>
+      </form>
+      <div>Current room: <span id="current-room">None</span></div>
+    </div>
+
+    <div class="room-section">
+      <h2>Send Message</h2>
+      <form id="message-form">
+        <input
+          type="text"
+          name="message"
+          placeholder="Type a message..."
+          disabled
+        />
+        <button type="submit" disabled>Send</button>
+      </form>
+    </div>
+
+    <h2>Messages</h2>
+    <div
+      id="typing-indicator"
+      style="
+        display: none;
+        padding: 8px;
+        font-size: 14px;
+        color: #888;
+        font-style: italic;
+      "
+    ></div>
     <ul id="chat"></ul>
   </body>
 </html>
