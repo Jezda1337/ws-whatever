@@ -65,15 +65,6 @@ CREATE TABLE "users" (
   "id" int PRIMARY KEY
 );
 
-CREATE TABLE "direct_message_rooms" (
-  "room_id" int PRIMARY KEY,
-  "community_id" int NOT NULL,
-  "user_a_id" int NOT NULL,
-  "user_b_id" int NOT NULL,
-  CHECK (user_a_id < user_b_id),
-  UNIQUE (community_id, user_a_id, user_b_id)
-);
-
 CREATE UNIQUE INDEX ON "room_participants" ("room_id", "user_id");
 
 CREATE UNIQUE INDEX ON "message_reads" ("message_id", "user_id");
@@ -106,14 +97,6 @@ ALTER TABLE "message_attachments" ADD FOREIGN KEY ("message_id") REFERENCES "mes
 ALTER TABLE "messages" ADD FOREIGN KEY ("reply_to_id") REFERENCES "messages" ("id");
 
 ALTER TABLE "rooms" ADD FOREIGN KEY ("community_id") REFERENCES "communities" ("id");
-
-ALTER TABLE "direct_message_rooms" ADD FOREIGN KEY ("room_id") REFERENCES "rooms" ("id");
-
-ALTER TABLE "direct_message_rooms" ADD FOREIGN KEY ("community_id") REFERENCES "communities" ("id");
-
-ALTER TABLE "direct_message_rooms" ADD FOREIGN KEY ("user_a_id") REFERENCES "users" ("id");
-
-ALTER TABLE "direct_message_rooms" ADD FOREIGN KEY ("user_b_id") REFERENCES "users" ("id");
 
 ALTER TABLE "room_participants" ADD FOREIGN KEY ("room_id") REFERENCES "rooms" ("id");
 

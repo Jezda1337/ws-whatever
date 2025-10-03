@@ -28,17 +28,16 @@ func RunMigration(db *gorm.DB) error {
 		}
 
 		if err := tx.AutoMigrate(
-			&ws.Community{},
-			&ws.User{},
-			&ws.Room{},
-			&ws.RoomParticipant{},
-			&ws.Message{},
-			&ws.MessageAttachment{},
-			&ws.MessageReaction{},
-			&ws.MessageRead{},
-			&ws.DirectMessageRoom{},
+		&ws.Community{},
+		&ws.User{},
+		&ws.Room{},
+		&ws.RoomParticipant{},
+		&ws.Message{},
+		&ws.MessageAttachment{},
+		&ws.MessageReaction{},
+		&ws.MessageRead{},
 		); err != nil {
-			return err
+		 return err
 		}
 
 		if err := tx.Create(&ws.Community{ID: 1}).Error; err != nil {

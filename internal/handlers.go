@@ -292,112 +292,94 @@ func CreateOrGetDirectMessage(db *gorm.DB) echo.HandlerFunc {
 
 		currentUserID := userID.(int)
 		if currentUserID == req.UserID {
-			return echo.NewHTTPError(http.StatusBadRequest, "cannot create DM with yourself")
+		return echo.NewHTTPError(http.StatusBadRequest, "cannot create DM with yourself")
 		}
 
-		userAID, userBID := currentUserID, req.UserID
-		if userAID > userBID {
-			userAID, userBID = userBID, userAID
-		}
+		// Check if DM room already exists by finding a direct room with these 2 participants
+		var existingRoom ws.Room
+		err := db.Where("community_id = ? AND type = ?", req.CommunityID, ws.RoomTypeDirect).
+		 Joins("JOIN room_participants rp1 ON rp1.room_id = rooms.id AND rp1.user_id = ?", currentUserID).
+		Joins("JOIN room_participants rp2 ON rp2.room_id = rooms.id AND rp2.user_id = ?", req.UserID).
+		 Where("(SELECT COUNT(*) FROM room_participants WHERE room_id = rooms.id) = 2").
+		 First(&existingRoom).Error
 
-		var existingDM ws.DirectMessageRoom
-		err := db.Where("community_id = ? AND user_a_id = ? AND user_b_id = ?", req.CommunityID, userAID, userBID).
-			First(&existingDM).Error
-
-		if err == nil {
-			var room ws.Room
-			db.First(&room, existingDM.RoomID)
-			return c.JSON(http.StatusOK, DirectMessageResponse{
-				RoomID:      existingDM.RoomID,
-				CommunityID: existingDM.CommunityID,
-				UserAID:     existingDM.UserAID,
-				UserBID:     existingDM.UserBID,
-				CreatedAt:   room.CreatedAt,
-			})
+	if err == nil {
+		 return c.JSON(http.StatusOK, DirectMessageResponse{
+		 RoomID:      existingRoom.ID,
+		 CommunityID: existingRoom.CommunityID,
+		 UserAID:     min(currentUserID, req.UserID),
+		UserBID:     max(currentUserID, req.UserID),
+		CreatedAt:   existingRoom.CreatedAt,
+		})
 		}
 
 		if err != gorm.ErrRecordNotFound {
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to check existing DM")
-		}
+		 return echo.NewHTTPError(http.StatusInternalServerError, "failed to check existing DM")
+	}
 
 		tx := db.Begin()
 		defer func() {
-			if r := recover(); r != nil {
-				tx.Rollback()
-			}
+		if r := recover(); r != nil {
+		tx.Rollback()
+		}
 		}()
 
-		for _, uid := range []int{userAID, userBID} {
-			var user ws.User
-			if err := tx.First(&user, uid).Error; err != nil {
-				if err == gorm.ErrRecordNotFound {
-					user = ws.User{ID: uid}
-					if err := tx.Create(&user).Error; err != nil {
-						tx.Rollback()
-						return echo.NewHTTPError(http.StatusInternalServerError, "failed to create user")
-					}
-				} else {
-					tx.Rollback()
-					return echo.NewHTTPError(http.StatusInternalServerError, "failed to fetch user")
-				}
-			}
+		for _, uid := range []int{currentUserID, req.UserID} {
+		var user ws.User
+		if err := tx.First(&user, uid).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+		user = ws.User{ID: uid}
+		if err := tx.Create(&user).Error; err != nil {
+		tx.Rollback()
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create user")
+		}
+		} else {
+		tx.Rollback()
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to fetch user")
+		}
+		}
 		}
 
 		room := ws.Room{
-			Name:        "",
-			CommunityID: req.CommunityID,
-			Type:        ws.RoomTypeDirect,
+		Name:        "",
+		CommunityID: req.CommunityID,
+		Type:        ws.RoomTypeDirect,
 		}
 		if err := tx.Create(&room).Error; err != nil {
-			tx.Rollback()
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to create room")
-		}
-
-		dmRoom := ws.DirectMessageRoom{
-			RoomID:      room.ID,
-			CommunityID: req.CommunityID,
-			UserAID:     userAID,
-			UserBID:     userBID,
-		}
-		if err := tx.Create(&dmRoom).Error; err != nil {
-			tx.Rollback()
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to create DM room")
+		tx.Rollback()
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create room")
 		}
 
 		participantA := ws.RoomParticipant{
-			RoomID: room.ID,
-			UserID: userAID,
-			Role:   "admin",
+		RoomID: room.ID,
+		UserID: currentUserID,
+		Role:   "member",
 		}
 		participantB := ws.RoomParticipant{
-			RoomID: room.ID,
-			UserID: userBID,
-			Role:   "member",
-		}
-
-		if currentUserID == userBID {
-			participantA.Role, participantB.Role = participantB.Role, participantA.Role
+		 RoomID: room.ID,
+		UserID: req.UserID,
+		Role:   "member",
 		}
 
 		if err := tx.Create(&participantA).Error; err != nil {
-			tx.Rollback()
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to add participants")
+		tx.Rollback()
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to add participants")
 		}
 		if err := tx.Create(&participantB).Error; err != nil {
-			tx.Rollback()
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to add participants")
+		 tx.Rollback()
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to add participants")
 		}
 
 		if err := tx.Commit().Error; err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to commit transaction")
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to commit transaction")
 		}
 
 		return c.JSON(http.StatusCreated, DirectMessageResponse{
-			RoomID:      room.ID,
-			CommunityID: req.CommunityID,
-			UserAID:     userAID,
-			UserBID:     userBID,
-			CreatedAt:   room.CreatedAt,
+		RoomID:      room.ID,
+		 CommunityID: req.CommunityID,
+		UserAID:     min(currentUserID, req.UserID),
+		UserBID:     max(currentUserID, req.UserID),
+		 CreatedAt:   room.CreatedAt,
 		})
 	}
 }

@@ -67,19 +67,6 @@ group
 direct
 }
 
-Table direct_message_rooms {
-room_id int [pk, ref: - rooms.id]
-community_id int [ref: > communities.id, not null]
-user_a_id int [ref: > users.id, not null]
-user_b_id int [ref: > users.id, not null]
-
-indexes {
-(community_id, user_a_id, user_b_id) [unique]
-}
-
-Note: 'user_a_id must be less than user_b_id (enforced by CHECK constraint)'
-}
-
 // External service tables
 Table communities { id int [pk] }
 Table users { id int [pk] }
