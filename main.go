@@ -108,6 +108,9 @@ func main() {
 	e.POST("/rooms", internal.CreateRoom(dbClient))
 	e.GET("/rooms", internal.ListRooms(dbClient))
 	e.GET("/rooms/:id/messages", internal.GetRoomMessages(dbClient))
+	e.POST("/rooms/:id/participants", internal.AddRoomParticipant(dbClient))
+	e.GET("/users/rooms", internal.GetUserRooms(dbClient), testAuthMiddleware)
+	e.POST("/direct-messages", internal.CreateOrGetDirectMessage(dbClient), testAuthMiddleware)
 	e.DELETE("/messages/:id", internal.DeleteMessage(dbClient), testAuthMiddleware)
 	e.GET("/search/messages", internal.SearchMessages(dbClient))
 

@@ -36,6 +36,7 @@ func RunMigration(db *gorm.DB) error {
 			&ws.MessageAttachment{},
 			&ws.MessageReaction{},
 			&ws.MessageRead{},
+			&ws.DirectMessageRoom{},
 		); err != nil {
 			return err
 		}

@@ -81,3 +81,14 @@ type Community struct {
 type User struct {
 	ID int `gorm:"primaryKey"`
 }
+
+type DirectMessageRoom struct {
+	RoomID      int       `gorm:"primaryKey"`
+	CommunityID int       `gorm:"not null"`
+	UserAID     int       `gorm:"not null;uniqueIndex:idx_direct_message_rooms_unique"`
+	UserBID     int       `gorm:"not null;uniqueIndex:idx_direct_message_rooms_unique"`
+	Room        Room      `gorm:"foreignKey:RoomID"`
+	Community   Community `gorm:"foreignKey:CommunityID"`
+	UserA       User      `gorm:"foreignKey:UserAID"`
+	UserB       User      `gorm:"foreignKey:UserBID"`
+}
